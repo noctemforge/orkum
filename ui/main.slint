@@ -1,5 +1,20 @@
+import { ErrorPopup } from "error.slint";
 export component AppWindow inherits Window {
-    Text {
-        text: "ORKUM v0.2.0";
+    preferred-height: 720px;
+    preferred-width: 1280px;
+
+    in property <[string]> dir_content;
+
+    dir_list := VerticalLayout {
+        spacing: 5px;
+        Text {
+            text: "ORKUM v0.2.0";
+        }
+    }
+
+    callback error_notification <=> error_popup.error_notification;
+    error_popup := ErrorPopup {
+        height: root.height;
+        width: root.width;
     }
 }

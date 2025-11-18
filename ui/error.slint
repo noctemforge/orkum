@@ -1,0 +1,30 @@
+export component ErrorPopup {
+    property <string> error_msg;
+    callback error_notification(string);
+    error_notification(msg) => {
+        error_msg = msg;
+        error_popup.show();
+    }
+    error_popup := PopupWindow {
+        x: 0px;
+        y: 0px;
+        height: root.height;
+        width: root.width;
+        Rectangle {
+            height: 100%;
+            width: 100%;
+            background: #2f2f2f;
+            opacity: 0.35;
+        }
+
+        Rectangle {
+            height: 50%;
+            width: 50%;
+            background: #fab4b4;
+            Text {
+                text: error_msg;
+                color: black;
+            }
+        }
+    }
+}
