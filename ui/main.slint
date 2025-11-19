@@ -6,9 +6,21 @@ export component AppWindow inherits Window {
     in property <[string]> dir_content;
 
     dir_list := VerticalLayout {
+        y: 0;
+        height: 50%;
         spacing: 5px;
         Text {
             text: "ORKUM v0.2.0";
+        }
+
+        for i in dir_content: Rectangle {
+            height: 30px;
+            background: blueviolet;
+            Text {
+                x: 0;
+                text: i;
+                color: white;
+            }
         }
     }
 
