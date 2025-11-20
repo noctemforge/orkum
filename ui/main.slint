@@ -1,14 +1,21 @@
 import { ErrorPopup } from "error.slint";
+import { Button } from "std-widgets.slint";
+
 export component AppWindow inherits Window {
     preferred-height: 720px;
     preferred-width: 1280px;
 
     in property <[string]> dir_content;
 
+    callback set_new_dir <=> set_new_dir.clicked;
     dir_list := VerticalLayout {
         y: 0;
-        height: 50%;
-        spacing: 5px;
+        spacing: 50px;
+
+        set_new_dir := Button {
+            text: "Select Directory";
+        }
+
         Text {
             text: "ORKUM v0.2.0";
         }

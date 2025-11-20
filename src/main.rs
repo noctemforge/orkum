@@ -1,37 +1,58 @@
 // Prevent console window in addition to Slint window in Windows release builds when, e.g., starting the app via file manager. Ignored on other platforms.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use slint::{ComponentHandle, ModelRc, PlatformError, SharedString, VecModel, Weak};
+use std::cell::RefCell;
 use std::io;
+use std::path::PathBuf;
 use std::{fs::read_dir, rc::Rc};
-
-use slint::{ModelRc, PlatformError, SharedString, VecModel};
 
 slint::include_modules!();
 
-fn main() -> Result<(), PlatformError> {
-    let main_window = AppWindow::new()?;
-
-    // slint::VecModel::from(list)
-
-    match list_dir(".") {
-        Ok(list) => main_window.set_dir_content(ModelRc::from(Rc::new(VecModel::from(list)))),
-        Err(_) => todo!(),
-    }
-
-    main_window.run()
+struct AppState {
+    working_dir: PathBuf,
+    main_window: Weak<AppWindow>,
 }
 
-fn list_dir(path: &str) -> io::Result<Vec<SharedString>> {
+fn main() -> Result<(), PlatformError> {
+    let window = AppWindow::new()?;
+
+    let state = Rc::new(RefCell::new(AppState {
+        working_dir: PathBuf::from("."),
+        main_window: window.as_weak(),
+    }));
+
+    let state_copy = state.clone();
+    window.on_set_new_dir(move || {
+        let new_dir = show_open_dialog(&state_copy.borrow().working_dir);
+        // FIX | TRY : Since we packed it, this should be safe
+        let win = state_copy.borrow().main_window.unwrap();
+        match list_dir(new_dir) {
+            Ok(list) => win.set_dir_content(list),
+            Err(e) => win.invoke_error_notification(SharedString::from(format!(
+                "Could not open dir: {}",
+                e
+            ))),
+        };
+    });
+
+    window.run()
+}
+
+fn show_open_dialog(manifest: &PathBuf) -> PathBuf {
+    let dialog = rfd::FileDialog::new()
+        .set_title("Select a manifest")
+        .set_directory(manifest.as_path());
+
+    dialog.pick_folder().unwrap_or_else(|| manifest.clone())
+}
+
+fn list_dir(path: PathBuf) -> io::Result<ModelRc<SharedString>> {
     let mut entries = read_dir(path)?
-        .map(|res| res.map(|e| e.path()))
+        .map(|res| res.map(|e| SharedString::from(e.path().display().to_string())))
         .collect::<Result<Vec<_>, io::Error>>()?;
 
     entries.sort();
 
-    let out = entries
-        .iter()
-        .map(|f| SharedString::from(f.display().to_string()))
-        .collect::<Vec<SharedString>>();
-
-    Ok(out)
+    Ok(ModelRc::from(Rc::new(VecModel::from(entries))))
 }
