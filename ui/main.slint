@@ -7,12 +7,12 @@ export component AppWindow inherits Window {
 
     in property <[string]> dir_content;
 
-    callback set_new_dir <=> set_new_dir.clicked;
+    callback update_dir <=> update_dir.clicked;
     dir_list := VerticalLayout {
         y: 0;
         spacing: 50px;
 
-        set_new_dir := Button {
+        update_dir := Button {
             text: "Select Directory";
         }
 
