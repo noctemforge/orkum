@@ -4,6 +4,7 @@ import { Button } from "std-widgets.slint";
 export component AppWindow inherits Window {
     preferred-height: 720px;
     preferred-width: 1280px;
+    title: "ORKUM v0.2.0";
 
     in property <[string]> dir_content;
 
@@ -14,10 +15,6 @@ export component AppWindow inherits Window {
 
         update_dir := Button {
             text: "Select Directory";
-        }
-
-        Text {
-            text: "ORKUM v0.2.0";
         }
 
         for i in dir_content: Rectangle {
