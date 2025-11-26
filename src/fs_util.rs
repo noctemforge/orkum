@@ -6,22 +6,25 @@ use std::{fs::read_dir, rc::Rc};
 use crate::AppState;
 
 pub fn update_working_dir(state: &AppState) {
-    let new_dir = show_dir_dialog(&state.working_dir);
+    let new_dir = match show_dir_dialog(&state.working_dir) {
+        Some(dir) => dir,
+        None => return,
+    };
     let win = state.main_window.unwrap();
     match list_dir(new_dir) {
         Ok(list) => win.set_dir_content(list),
-        Err(e) => {
-            win.invoke_error_notification(SharedString::from(format!("Could not open dir: {}", e)))
-        }
+        Err(e) => win.invoke_error_notification(SharedString::from(format!(
+            "Could not open directory: {}",
+            e
+        ))),
     };
 }
 
-fn show_dir_dialog(manifest: &PathBuf) -> PathBuf {
+fn show_dir_dialog(manifest: &PathBuf) -> Option<PathBuf> {
     rfd::FileDialog::new()
-        .set_title("Select a manifest")
+        .set_title("Select a directory")
         .set_directory(manifest.as_path())
         .pick_folder()
-        .unwrap_or_else(|| manifest.clone())
 }
 
 fn list_dir(path: PathBuf) -> io::Result<ModelRc<SharedString>> {

@@ -24,7 +24,6 @@ fn main() -> Result<(), PlatformError> {
         main_window: window.as_weak(),
     }));
 
-    // FIX | TRY : Since we packed it, this should be safe
     window.on_update_dir(move || fs_util::update_working_dir(&state.clone().borrow()));
 
     window.run()
