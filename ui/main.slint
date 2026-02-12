@@ -1,29 +1,108 @@
 import { ErrorPopup } from "error.slint";
-import { Button } from "std-widgets.slint";
+import { Button, TabWidget, ScrollView } from "std-widgets.slint";
+
+component Landing {
+    // In callback
+    callback loaded_file;
+    update_file := Button {
+        text: "Open File";
+        clicked => {
+            loaded_file();
+        }
+    }
+}
+
+// component Workarea {
+//     TabWidget {
+//         Tab {
+//             Text {
+//                 text: "File 1";
+//             }
+//         }
+
+//         Tab {
+//             Text {
+//                 text: "File 2";
+//             }
+//         }
+//     }
+// }
+
+export struct FileEntry {
+    name: string,
+    content: string,
+}
 
 export component AppWindow inherits Window {
     preferred-height: 720px;
     preferred-width: 1280px;
     title: "ORKUM v0.2.0";
 
-    in property <[string]> dir_content;
+    // in property <[string]> dir-content;
+    property <bool> loaded_file;
 
-    callback update_dir <=> update_dir.clicked;
-    dir_list := VerticalLayout {
-        y: 0;
-        spacing: 50px;
+    callback open-file-clicked();
+    in property <[FileEntry]> files: [];
+    in-out property <int> active-tab: 0;
 
-        update_dir := Button {
-            text: "Select Directory";
+    // callback open_new_file;
+
+    if !loaded_file: land := Landing {
+        loaded_file => {
+            root.open-file-clicked();
+            loaded_file = !loaded_file;
+        }
+    }
+    if loaded_file:  VerticalLayout {
+        padding: 15px;
+        spacing: 10px;
+
+        // Header and Controls
+        HorizontalLayout {
+            spacing: 10px;
+            Text {
+                text: "Files Open: \{root.files.length}";
+                vertical-alignment: center;
+            }
+
+            Button {
+                text: "Open New File";
+                clicked => {
+                    root.open-file-clicked()
+                }
+            }
         }
 
-        for i in dir_content: Rectangle {
-            height: 30px;
-            background: blueviolet;
-            Text {
-                x: 0;
-                text: i;
-                color: white;
+        // Tab Bar
+        HorizontalLayout {
+            alignment: start;
+            spacing: 5px;
+            for entry[i] in root.files: Button {
+                text: entry.name;
+                // Simple styling to show active tab
+                primary: root.active-tab == i;
+                clicked => {
+                    debug(entry);
+                    root.active-tab = i
+                }
+            }
+        }
+
+        // Content Area
+        Rectangle {
+            border-width: 1px;
+            border-color: #ccc;
+            border-radius: 4px;
+            if (root.files.length > 0): ScrollView {
+                Text {
+                    text: root.files[root.active-tab].content;
+                    wrap: word-wrap;
+                }
+            }
+            if (root.files.length == 0): Text {
+                text: "No files opened.";
+                horizontal-alignment: center;
+                vertical-alignment: center;
             }
         }
     }
