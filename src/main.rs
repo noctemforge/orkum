@@ -3,28 +3,30 @@
 
 mod fs_util;
 
-use slint::{ComponentHandle, PlatformError, Weak};
-use std::cell::RefCell;
-use std::path::PathBuf;
+use slint::{ComponentHandle, PlatformError, VecModel, Weak};
 use std::rc::Rc;
 
 slint::include_modules!();
 
-/// Top level app data
+/// Top level app data references
+#[derive(Clone)]
 struct AppState {
-    working_dir: PathBuf,
+    open_files: Rc<VecModel<FileEntry>>,
     main_window: Weak<AppWindow>,
 }
 
 fn main() -> Result<(), PlatformError> {
     let window = AppWindow::new()?;
 
-    let state = Rc::new(RefCell::new(AppState {
-        working_dir: PathBuf::from("."),
-        main_window: window.as_weak(),
-    }));
+    let files_model = Rc::new(VecModel::<FileEntry>::default());
+    window.set_files(files_model.clone().into());
 
-    window.on_update_dir(move || fs_util::update_working_dir(&state.clone().borrow()));
+    let state = AppState {
+        main_window: window.as_weak(),
+        open_files: files_model.clone(),
+    };
+
+    window.on_open_file_clicked(move || fs_util::append_new_file(&state));
 
     window.run()
 }
