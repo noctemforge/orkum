@@ -1,5 +1,6 @@
 import { ErrorPopup } from "error.slint";
 import { Button, TabWidget, ScrollView } from "std-widgets.slint";
+import { FileTabs, FileEntry } from "tabs.slint";
 
 component Landing {
     // In callback
@@ -10,11 +11,6 @@ component Landing {
             loaded_file();
         }
     }
-}
-
-export struct FileEntry {
-    name: string,
-    content: string,
 }
 
 export component AppWindow inherits Window {
@@ -50,31 +46,10 @@ export component AppWindow inherits Window {
             }
         }
 
-        // Tabs
-        // TODO: Change with TabWidget when dynamic tabs are supported
-        HorizontalLayout {
-            alignment: start;
-            spacing: 5px;
-            for entry[i] in root.files: Button {
-                text: entry.name;
-                primary: root.active-tab == i;
-                clicked => {
-                    root.active-tab = i
-                }
-            }
+        tabs:= FileTabs {
+            files: files;
         }
-
-        Rectangle {
-            border-width: 1px;
-            border-color: #ccc;
-            border-radius: 4px;
-            ScrollView {
-                Text {
-                    text: root.files[root.active-tab].content;
-                    wrap: word-wrap;
-                }
-            }
-        }
+    
     }
 
     callback error_notification <=> error_popup.error_notification;

@@ -1,0 +1,67 @@
+
+import { ScrollView } from "std-widgets.slint";
+export struct FileEntry {
+    name: string,
+    content: string,
+}
+component TabHandle {
+    // Supplied 
+    in property <string> text;
+    in property <bool> active;
+    callback clicked();
+    callback closed();
+    Rectangle {
+        width: 120px;
+        height: 40px;
+        background: active ? ta.pressed ? #0800ff : (ta.has-hover ? #4c45ff : #645eff) : ta.pressed ? #333333 : (ta.has-hover ? #555555 : #444444);
+        border-radius: 4px;
+        border-width: 2px;
+        border-color: white;
+        Text {
+            text: "Touch Me";
+            color: white;
+        }
+
+        ta := TouchArea {
+            // Logic is now handled here
+            clicked => {
+                debug("Area touched!")
+            }
+        }
+    }
+}
+
+export component FileTabs {
+    // Supplied
+    in-out property <int> active-tab;
+    in-out property <[FileEntry]> files;
+
+    VerticalLayout {
+        padding: 15px;
+        spacing: 10px;
+
+        // TODO: Change with TabWidget when dynamic tabs are supported
+        HorizontalLayout {
+            alignment: start;
+            spacing: 5px;
+            for entry[i] in root.files: TabHandle {
+                text: entry.name;
+                active: root.active-tab == i;
+                clicked => {
+                    root.active-tab = i
+                }
+            }
+            Rectangle {
+                border-width: 1px;
+                border-color: #ccc;
+                border-radius: 4px;
+                ScrollView {
+                    Text {
+                        text: root.files[root.active-tab].content;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+    }
+}
