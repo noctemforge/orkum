@@ -1,0 +1,20 @@
+export component IconButton {
+    in property <image> src;
+    callback clicked();
+    
+    Rectangle {
+        width: 20px;
+        height: 20px;
+        background: ta.has-hover ? #555555 : transparent;
+        border-radius: 4px;
+        Image {
+            width: 20px;
+            source: src;
+        }
+
+        ta := TouchArea {
+            mouse-cursor: pointer;
+            clicked => clicked();
+        }
+    }
+}
