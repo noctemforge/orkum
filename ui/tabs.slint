@@ -12,27 +12,37 @@ component TabHandle {
     callback clicked();
     callback closed();
     Rectangle {
-        width: 120px;
-        height: 40px;
-        background: active ? ta.pressed ? #0800ff : (ta.has-hover ? #4c45ff : #645eff) : ta.pressed ? #333333 : (ta.has-hover ? #555555 : #444444);
+        min-width: 100px;
+        max-width: 200px;
+        background: active ? ta-handle.pressed ? #0800ff : (ta-handle.has-hover ? #4c45ff : #645eff) : ta-handle.pressed ? #333333 : (ta-handle.has-hover ? #555555 : #444444);
         border-radius: 4px;
-        ta := TouchArea {
+        ta-handle := TouchArea {
             mouse-cursor: pointer;
             clicked => clicked();
         }
 
         HorizontalLayout {
-            alignment: space-around;
+            padding: 10px;
             Text {
                 text: text;
                 color: white;
+                vertical-alignment: center;
             }
 
-            Button {
-                icon: @image-url("icons/x-mark.svg");
+            Rectangle {
                 width: 20px;
-                height: 20px;
-                clicked => closed();
+                background: ta-close.has-hover ? #555555 : transparent;
+                border-radius: 4px;
+                Image {
+                    width: 20px;
+                    source: @image-url("icons/x-mark.svg");
+                    accessible-label: "Close";
+                }
+
+                ta-close := TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => closed();
+                }
             }
         }
     }
