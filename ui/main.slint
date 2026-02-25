@@ -19,6 +19,7 @@ export component AppWindow inherits Window {
     title: "ORKUM v0.2.0";
 
     callback open-file-clicked();
+    callback close-file-clicked(int);
     in-out property <[FileEntry]> files: [];
     in-out property <int> active-tab: 0;
 
@@ -46,10 +47,12 @@ export component AppWindow inherits Window {
             }
         }
 
-        tabs:= FileTabs {
+        tabs := FileTabs {
             files: files;
+            close-file(index) => {
+                close-file-clicked(index);
+            }
         }
-    
     }
 
     callback error_notification <=> error_popup.error_notification;

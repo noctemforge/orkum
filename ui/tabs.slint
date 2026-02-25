@@ -1,9 +1,10 @@
+import { ScrollView, Button } from "std-widgets.slint";
 
-import { ScrollView } from "std-widgets.slint";
 export struct FileEntry {
     name: string,
     content: string,
 }
+
 component TabHandle {
     // Supplied 
     in property <string> text;
@@ -15,17 +16,23 @@ component TabHandle {
         height: 40px;
         background: active ? ta.pressed ? #0800ff : (ta.has-hover ? #4c45ff : #645eff) : ta.pressed ? #333333 : (ta.has-hover ? #555555 : #444444);
         border-radius: 4px;
-        border-width: 2px;
-        border-color: white;
-        Text {
-            text: "Touch Me";
-            color: white;
+        ta := TouchArea {
+            mouse-cursor: pointer;
+            clicked => clicked();
         }
 
-        ta := TouchArea {
-            // Logic is now handled here
-            clicked => {
-                debug("Area touched!")
+        HorizontalLayout {
+            alignment: space-around;
+            Text {
+                text: text;
+                color: white;
+            }
+
+            Button {
+                icon: @image-url("icons/x-mark.svg");
+                width: 20px;
+                height: 20px;
+                clicked => closed();
             }
         }
     }
@@ -35,7 +42,7 @@ export component FileTabs {
     // Supplied
     in-out property <int> active-tab;
     in-out property <[FileEntry]> files;
-
+    callback close-file(int);
     VerticalLayout {
         padding: 15px;
         spacing: 10px;
@@ -50,16 +57,20 @@ export component FileTabs {
                 clicked => {
                     root.active-tab = i
                 }
+                closed => {
+                    root.close-file(i);
+                }
             }
-            Rectangle {
-                border-width: 1px;
-                border-color: #ccc;
-                border-radius: 4px;
-                ScrollView {
-                    Text {
-                        text: root.files[root.active-tab].content;
-                        wrap: word-wrap;
-                    }
+        }
+
+        Rectangle {
+            border-width: 1px;
+            border-color: #ccc;
+            border-radius: 4px;
+            ScrollView {
+                Text {
+                    text: root.files[root.active-tab].content;
+                    wrap: word-wrap;
                 }
             }
         }
