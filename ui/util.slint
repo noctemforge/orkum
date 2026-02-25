@@ -1,3 +1,22 @@
+export global Palette {
+    in-out property <color> accent-500: #6366f1;
+    in-out property <color> accent-600: #4f46e5;
+    in-out property <color> accent-700: #4338ca;
+    in-out property <color> accent-800: #3730a3;
+    in-out property <color> accent-900: #312e81;
+    in-out property <color> bg-50: #fafafa;
+    in-out property <color> bg-100: #f4f4f5;
+    in-out property <color> bg-200: #e4e4e7;
+    in-out property <color> bg-300: #d4d4d8;
+    in-out property <color> bg-400: #a1a1aa;
+    in-out property <color> bg-500: #71717a;
+    in-out property <color> bg-600: #52525b;
+    in-out property <color> bg-700: #3f3f46;
+    in-out property <color> bg-800: #27272a;
+    in-out property <color> bg-900: #18181b;
+    in-out property <color> bg-950: #09090b;
+}
+
 export component IconButton {
     // Supplied
     in property <image> src;
@@ -5,11 +24,13 @@ export component IconButton {
     Rectangle {
         width: 20px;
         height: 20px;
-        background: ta.has-hover ? #555555 : transparent;
+        border-width: 1px;
+        border-color: ta.has-hover ? Palette.accent-700 : transparent;
         border-radius: 4px;
         Image {
             width: 20px;
             source: src;
+            colorize: white;
         }
 
         ta := TouchArea {

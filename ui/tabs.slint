@@ -1,5 +1,5 @@
 import { ScrollView, Button } from "std-widgets.slint";
-import { IconButton } from "util.slint";
+import { IconButton, Palette } from "util.slint";
 
 export struct FileEntry {
     name: string,
@@ -15,7 +15,7 @@ component TabHandle {
     Rectangle {
         min-width: 100px;
         max-width: 200px;
-        background: active ? ta-handle.pressed ? #0800ff : (ta-handle.has-hover ? #4c45ff : #645eff) : ta-handle.pressed ? #333333 : (ta-handle.has-hover ? #555555 : #444444);
+        background: active ? ta-handle.pressed ? Palette.accent-700 : (ta-handle.has-hover ? Palette.accent-600 : Palette.accent-500) : ta-handle.has-hover ? Palette.bg-700 : Palette.bg-900;
         border-radius: 4px;
         ta-handle := TouchArea {
             mouse-cursor: pointer;
@@ -70,13 +70,18 @@ export component FileTabs {
         }
 
         Rectangle {
-            border-width: 1px;
-            border-color: #ccc;
+            background: Palette.bg-800;
             border-radius: 4px;
             ScrollView {
+                width: root.width - 15px;
+                height: root.height - 60px;
                 Text {
+                    x: 20px;
+                    y: 20px;
                     text: root.files[root.active-tab].content;
                     wrap: word-wrap;
+                    vertical-alignment: top;
+                    horizontal-alignment: left;
                 }
             }
         }

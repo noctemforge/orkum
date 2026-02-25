@@ -1,6 +1,7 @@
 import { ErrorPopup } from "error.slint";
 import { Button, TabWidget, ScrollView } from "std-widgets.slint";
 import { FileTabs, FileEntry } from "tabs.slint";
+import { Palette } from "util.slint";
 
 component Landing {
     // Supplied
@@ -17,6 +18,7 @@ export component AppWindow inherits Window {
     title: "Orkum";
     preferred-height: 720px;
     preferred-width: 1280px;
+    background: Palette.bg-950;
 
     callback open-file-clicked();
     callback close-file-clicked(int);
