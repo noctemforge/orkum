@@ -3,7 +3,7 @@ import { Button, TabWidget, ScrollView } from "std-widgets.slint";
 import { FileTabs, FileEntry } from "tabs.slint";
 
 component Landing {
-    // In callback
+    // Supplied
     callback loaded_file;
     update_file := Button {
         text: "Open File";
@@ -14,9 +14,9 @@ component Landing {
 }
 
 export component AppWindow inherits Window {
+    title: "Orkum";
     preferred-height: 720px;
     preferred-width: 1280px;
-    title: "ORKUM v0.2.0";
 
     callback open-file-clicked();
     callback close-file-clicked(int);
@@ -42,7 +42,7 @@ export component AppWindow inherits Window {
             Button {
                 text: "Open New File";
                 clicked => {
-                    root.open-file-clicked()
+                    root.open-file-clicked();
                 }
             }
         }

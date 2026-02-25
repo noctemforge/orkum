@@ -19,7 +19,9 @@ component TabHandle {
         border-radius: 4px;
         ta-handle := TouchArea {
             mouse-cursor: pointer;
-            clicked => clicked();
+            clicked => {
+                clicked();
+            }
         }
 
         HorizontalLayout {
@@ -34,7 +36,9 @@ component TabHandle {
 
             IconButton {
                 src: @image-url("icons/x-mark.svg");
-                clicked => closed();
+                clicked => {
+                    closed();
+                }
             }
         }
     }
