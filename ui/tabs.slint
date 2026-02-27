@@ -1,9 +1,9 @@
-import { ScrollView, Button } from "std-widgets.slint";
+import { ScrollView, Button, VerticalBox, ListView } from "std-widgets.slint";
 import { IconButton, Palette } from "util.slint";
 
 export struct FileEntry {
     name: string,
-    content: string,
+    hex_rows: [string],
 }
 
 component TabHandle {
@@ -50,13 +50,13 @@ export component FileTabs {
     in-out property <[FileEntry]> files;
     callback close-file(int);
     VerticalLayout {
-        padding: 15px;
-        spacing: 10px;
+        padding: 16px;
+        spacing: 8px;
 
         // TODO: Change with TabWidget when dynamic tabs are supported
         HorizontalLayout {
             alignment: start;
-            spacing: 5px;
+            spacing: 4px;
             for entry[i] in root.files: TabHandle {
                 text: entry.name;
                 active: root.active-tab == i;
@@ -72,16 +72,16 @@ export component FileTabs {
         Rectangle {
             background: Palette.bg-800;
             border-radius: 4px;
-            ScrollView {
-                width: root.width - 15px;
-                height: root.height - 60px;
-                Text {
-                    x: 20px;
-                    y: 20px;
-                    text: root.files[root.active-tab].content;
-                    wrap: word-wrap;
-                    vertical-alignment: top;
-                    horizontal-alignment: left;
+            VerticalBox {
+                ListView {
+                    for row_data in root.files[root.active-tab].hex_rows: Rectangle {
+                        height: 25px;
+                        Text {
+                            text: row_data;
+                            font-family: "RobotoMono";
+                            vertical-alignment: center;
+                        }
+                    }
                 }
             }
         }
