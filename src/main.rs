@@ -26,7 +26,10 @@ fn main() -> Result<(), PlatformError> {
         open_files: files_model.clone(),
     };
 
-    window.on_open_file_clicked(move || fs_util::append_new_file(&state));
+    window.on_open_file_clicked(move || fs_util::open_new_file(&state));
+    window.on_close_file_clicked(move |index| {
+        files_model.remove(index as usize);
+    });
 
     window.run()
 }
