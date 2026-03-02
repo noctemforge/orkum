@@ -1,9 +1,15 @@
 import { ScrollView, Button, VerticalBox, ListView } from "std-widgets.slint";
 import { IconButton, Palette } from "util.slint";
 
+export struct HexRow {
+    offset: string,
+    hex: string,
+    ascii: string,
+}
+
 export struct FileEntry {
     name: string,
-    hex_rows: [string],
+    content: [HexRow],
 }
 
 component TabHandle {
@@ -74,11 +80,18 @@ export component FileTabs {
             border-radius: 4px;
             VerticalBox {
                 ListView {
-                    for row_data in root.files[root.active-tab].hex_rows: Rectangle {
+                    for row in root.files[root.active-tab].content: HorizontalLayout {
                         height: 25px;
+                        spacing: 10px;
                         Text {
-                            text: row_data;
-                            font-family: "RobotoMono";
+                            text: row.offset;
+                            width: 100px;
+                            color: #8b949e;
+                            font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
+                        }
+                        Text {
+                            text: row.hex;
+                            font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
                             vertical-alignment: center;
                         }
                     }
