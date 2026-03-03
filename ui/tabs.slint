@@ -1,12 +1,20 @@
 import { ScrollView, Button, VerticalBox, ListView } from "std-widgets.slint";
 import { IconButton, Palette } from "util.slint";
 
+/// Row of editable bytes
+export struct ByteData {
+    value: string,
+    is_modified: bool,
+}
+
+/// Row of hex bytes
 export struct HexRow {
     offset: string,
-    hex: string,
+    hex: [ByteData],
     ascii: string,
 }
 
+/// Representation of the current state of file content
 export struct FileEntry {
     name: string,
     content: [HexRow],
@@ -55,6 +63,7 @@ export component FileTabs {
     in-out property <int> active-tab;
     in-out property <[FileEntry]> files;
     callback close-file(int);
+    callback byte_edited(int, int, string);
     VerticalLayout {
         padding: 16px;
         spacing: 8px;
@@ -80,7 +89,7 @@ export component FileTabs {
             border-radius: 4px;
             VerticalBox {
                 ListView {
-                    for row in root.files[root.active-tab].content: HorizontalLayout {
+                    for row[r_idx] in root.files[root.active-tab].content: HorizontalLayout {
                         height: 25px;
                         spacing: 10px;
                         Text {
@@ -89,10 +98,24 @@ export component FileTabs {
                             color: #8b949e;
                             font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
                         }
+
+                        for b[b_idx] in row.hex: Rectangle {
+                            width: 24px;
+                            background: b.is_modified ? #3e3e10 : transparent;
+                            TextInput {
+                                text: b.value;
+                                font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
+                                horizontal-alignment: center;
+                                accepted => {
+                                    root.byte_edited(r_idx, b_idx, self.text)
+                                }
+                            }
+                        }
                         Text {
-                            text: row.hex;
+                            text: row.ascii;
+                            width: 150px;
                             font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                            vertical-alignment: center;
+                            color: #888;
                         }
                     }
                 }
