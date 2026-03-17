@@ -1,6 +1,6 @@
 import { ErrorPopup } from "error.slint";
 import { Button, TabWidget, ScrollView } from "std-widgets.slint";
-import { FileTabs, FileEntry } from "tabs.slint";
+import { FileTabs, FileEntry, RowData } from "tabs.slint";
 import { Palette } from "util.slint";
 
 component Landing {
@@ -17,27 +17,32 @@ component Landing {
 export component AppWindow inherits Window {
     title: "Orkum";
     preferred-height: 720px;
-    preferred-width: 1280px;
+    preferred-width: 480px;
     background: Palette.bg-950;
 
     callback open-file-clicked();
+    callback switch_file(int);
     callback close-file-clicked(int);
-    in-out property <[FileEntry]> files: [];
+    callback byte_edited(int, int, string);
+    callback save_requested();
+
+    in property <[RowData]> hex_rows;
+    in property <[FileEntry]> open_files;
     in-out property <int> active-tab: 0;
 
-    if (root.files.length == 0): Landing {
+    if (root.open_files.length == 0): Landing {
         loaded_file => {
             root.open-file-clicked();
         }
     }
-    if (root.files.length > 0): VerticalLayout {
+    if (root.open_files.length > 0): VerticalLayout {
         padding: 15px;
         spacing: 10px;
 
         HorizontalLayout {
             spacing: 10px;
             Text {
-                text: "Files Open: \{root.files.length}";
+                text: "Files Open: \{root.open_files.length}";
                 vertical-alignment: center;
             }
 
@@ -50,9 +55,13 @@ export component AppWindow inherits Window {
         }
 
         tabs := FileTabs {
-            files: files;
+            hex_rows: hex_rows;
+            files: open_files;
             close-file(index) => {
                 close-file-clicked(index);
+            }
+            byte_edited(row, byte, val) => {
+                byte_edited(row, byte, val)
             }
         }
     }

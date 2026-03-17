@@ -8,16 +8,16 @@ export struct ByteData {
 }
 
 /// Row of hex bytes
-export struct HexRow {
+export struct RowData {
     offset: string,
-    hex: [ByteData],
+    bytes: [ByteData],
     ascii: string,
 }
 
 /// Representation of the current state of file content
 export struct FileEntry {
     name: string,
-    content: [HexRow],
+    modified: bool,
 }
 
 component TabHandle {
@@ -60,6 +60,7 @@ component TabHandle {
 
 export component FileTabs {
     // Supplied
+    in property <[RowData]> hex_rows;
     in-out property <int> active-tab;
     in-out property <[FileEntry]> files;
     callback close-file(int);
@@ -89,7 +90,7 @@ export component FileTabs {
             border-radius: 4px;
             VerticalBox {
                 ListView {
-                    for row[r_idx] in root.files[root.active-tab].content: HorizontalLayout {
+                    for row[r_idx] in root.hex_rows: HorizontalLayout {
                         height: 25px;
                         spacing: 10px;
                         Text {
@@ -98,24 +99,31 @@ export component FileTabs {
                             color: #8b949e;
                             font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
                         }
-
-                        for b[b_idx] in row.hex: Rectangle {
-                            width: 24px;
-                            background: b.is_modified ? #3e3e10 : transparent;
-                            TextInput {
-                                text: b.value;
-                                font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                                horizontal-alignment: center;
-                                accepted => {
-                                    root.byte_edited(r_idx, b_idx, self.text)
+                        HorizontalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 4px;
+                            for b[b_idx] in row.bytes: Rectangle {
+                                width: 24px;
+                                background: b.is_modified ? #3e3e10 : transparent;
+                                TextInput {
+                                    text: b.value;
+                                    color: b.is_modified ? #ffcc00 : #c9d1d9;
+                                    font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                    edited => {
+                                        root.byte_edited(r_idx, b_idx, self.text);
+                                    }
                                 }
                             }
                         }
+
                         Text {
                             text: row.ascii;
                             width: 150px;
                             font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
                             color: #888;
+                            vertical-alignment: center;
                         }
                     }
                 }
