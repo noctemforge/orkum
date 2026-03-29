@@ -4,12 +4,12 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::{cell::RefCell, fs};
 
-use crate::{AppState, HexModel};
+use crate::{AppState, FileModel};
 
 pub fn open_new_file(state: &mut AppState) {
     if let Some(path) = show_file_dialog() {
         if let Ok(meta) = fs::metadata(&path) {
-            let new_file_handle = Rc::new(HexModel {
+            let new_file_handle = Rc::new(FileModel {
                 path,
                 file_size: meta.len(),
                 pending_changes: RefCell::new(HashMap::new()),

@@ -20,11 +20,11 @@ export struct FileEntry {
     modified: bool,
 }
 
-component TabHandle {
+export component TabHandle {
     // Supplied 
     in property <string> text;
     in property <bool> active;
-    callback clicked();
+    callback on_click();
     callback closed();
     Rectangle {
         min-width: 100px;
@@ -34,7 +34,7 @@ component TabHandle {
         ta-handle := TouchArea {
             mouse-cursor: pointer;
             clicked => {
-                clicked();
+                on_click();
             }
         }
 
@@ -52,80 +52,6 @@ component TabHandle {
                 src: @image-url("icons/x-mark.svg");
                 clicked => {
                     closed();
-                }
-            }
-        }
-    }
-}
-
-export component FileTabs {
-    // Supplied
-    in property <[RowData]> hex_rows;
-    in-out property <int> active-tab;
-    in-out property <[FileEntry]> files;
-    callback close-file(int);
-    callback byte_edited(int, int, string);
-    VerticalLayout {
-        padding: 16px;
-        spacing: 8px;
-
-        // TODO: Change with TabWidget when dynamic tabs are supported
-        HorizontalLayout {
-            alignment: start;
-            spacing: 4px;
-            for entry[i] in root.files: TabHandle {
-                text: entry.name;
-                active: root.active-tab == i;
-                clicked => {
-                    root.active-tab = i
-                }
-                closed => {
-                    root.close-file(i);
-                }
-            }
-        }
-
-        Rectangle {
-            background: Palette.bg-800;
-            border-radius: 4px;
-            VerticalBox {
-                ListView {
-                    for row[r_idx] in root.hex_rows: HorizontalLayout {
-                        height: 25px;
-                        spacing: 10px;
-                        Text {
-                            text: row.offset;
-                            width: 100px;
-                            color: #8b949e;
-                            font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                        }
-                        HorizontalLayout {
-                            horizontal-stretch: 1;
-                            spacing: 4px;
-                            for b[b_idx] in row.bytes: Rectangle {
-                                width: 24px;
-                                background: b.is_modified ? #3e3e10 : transparent;
-                                TextInput {
-                                    text: b.value;
-                                    color: b.is_modified ? #ffcc00 : #c9d1d9;
-                                    font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                                    horizontal-alignment: center;
-                                    vertical-alignment: center;
-                                    edited => {
-                                        root.byte_edited(r_idx, b_idx, self.text);
-                                    }
-                                }
-                            }
-                        }
-
-                        Text {
-                            text: row.ascii;
-                            width: 150px;
-                            font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                            color: #888;
-                            vertical-alignment: center;
-                        }
-                    }
                 }
             }
         }

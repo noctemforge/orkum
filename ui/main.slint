@@ -1,6 +1,12 @@
 import { ErrorPopup } from "error.slint";
-import { Button, TabWidget, ScrollView } from "std-widgets.slint";
-import { FileTabs, FileEntry, RowData } from "tabs.slint";
+import {
+    Button,
+    TabWidget,
+    ScrollView,
+    VerticalBox,
+    ListView,
+} from "std-widgets.slint";
+import { FileEntry, RowData, TabHandle } from "tabs.slint";
 import { Palette } from "util.slint";
 
 component Landing {
@@ -20,11 +26,10 @@ export component AppWindow inherits Window {
     preferred-width: 480px;
     background: Palette.bg-950;
 
-    callback open-file-clicked();
+    callback open_file_clicked();
     callback switch_file(int);
-    callback close-file-clicked(int);
+    callback close_file_clicked(int);
     callback byte_edited(int, int, string);
-    callback save_requested();
 
     in property <[RowData]> hex_rows;
     in property <[FileEntry]> open_files;
@@ -32,7 +37,7 @@ export component AppWindow inherits Window {
 
     if (root.open_files.length == 0): Landing {
         loaded_file => {
-            root.open-file-clicked();
+            root.open_file_clicked();
         }
     }
     if (root.open_files.length > 0): VerticalLayout {
@@ -49,19 +54,75 @@ export component AppWindow inherits Window {
             Button {
                 text: "Open New File";
                 clicked => {
-                    root.open-file-clicked();
+                    root.open_file_clicked();
                 }
             }
         }
 
-        tabs := FileTabs {
-            hex_rows: hex_rows;
-            files: open_files;
-            close-file(index) => {
-                close-file-clicked(index);
+        VerticalLayout {
+        padding: 16px;
+        spacing: 8px;
+
+            // TODO: Change with TabWidget when dynamic tabs are supported
+            HorizontalLayout {
+                alignment: start;
+                spacing: 4px;
+                for entry[i] in root.open_files: TabHandle {
+                    text: entry.name;
+                    active: root.active_tab == i;
+                    on_click => {
+                        root.switch_file(i);
+                    }
+                    closed => {
+                        root.close_file_clicked(i);
+                    }
+                }
             }
-            byte_edited(row, byte, val) => {
-                byte_edited(row, byte, val)
+
+            Rectangle {
+                background: Palette.bg-800;
+                border-radius: 4px;
+                VerticalBox {
+                    ListView {
+                        for row[r_idx] in root.hex_rows: HorizontalLayout {
+                            height: 25px;
+                            spacing: 10px;
+                            Text {
+                                text: row.offset;
+                                width: 100px;
+                                color: #8b949e;
+                                font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
+                        }
+
+                            HorizontalLayout {
+                                horizontal-stretch: 1;
+                                spacing: 4px;
+                                for b[b_idx] in row.bytes: Rectangle {
+                                    width: 24px;
+                                    background: b.is_modified ? #3e3e10 : transparent;
+                                    TextInput {
+                                        text: b.value;
+                                        color: b.is_modified ? #ffcc00 : #c9d1d9;
+                                        font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
+                                    horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                        edited => {
+                                            root.byte_edited(r_idx, b_idx, self.text);
+                                        }
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: row.ascii;
+                                width: 150px;
+                                font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
+                            color: #888;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
