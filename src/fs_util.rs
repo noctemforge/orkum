@@ -1,43 +1,13 @@
-use slint::ModelNotify;
+use slint::{ModelNotify, SharedString};
 use std::collections::HashMap;
+use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
-use std::{cell::RefCell, fs};
 
 use crate::{AppState, FileModel};
 
-pub fn open_new_file(state: &mut AppState) {
-    if let Some(path) = show_file_dialog() {
-        if let Ok(meta) = fs::metadata(&path) {
-            let new_file_handle = Rc::new(FileModel {
-                path,
-                file_size: meta.len(),
-                pending_changes: RefCell::new(HashMap::new()),
-                notify: ModelNotify::default(),
-            });
-            state.open_files.push(new_file_handle);
-            state.active_file = Some(state.open_files.len() - 1);
-        }
-
-        // match File::open(&path) {
-        //     Ok(f) => {
-        //         let name = path
-        //             .file_name()
-        //             .unwrap_or_default()
-        //             .to_string_lossy()
-        //             .to_string();
-
-        //         files_model.push(FileEntry {
-        //             name: name.into(),
-        //             content: ModelRc::new(hex_model_handle),
-        //         });
-
-        //         // Switch to the newly opened tab
-        //         win.set_active_tab((files_model.row_count() - 1) as i32);
-        //     }
-        //     Err(e) => eprintln!("Error reading file: {}", e),
-        // }
-    }
+pub enum FileMessage {
+    Open { path: SharedString },
 }
 
 fn show_file_dialog() -> Option<PathBuf> {
@@ -45,6 +15,23 @@ fn show_file_dialog() -> Option<PathBuf> {
         .set_title("Select a file")
         .set_directory(PathBuf::from("."))
         .pick_file()
+}
+
+impl AppState {
+    pub fn open_new_file(&mut self) {
+        if let Some(path) = show_file_dialog() {
+            if let Ok(meta) = fs::metadata(&path) {
+                let new_file_handle = Rc::new(FileModel {
+                    path,
+                    file_size: meta.len(),
+                    pending_changes: HashMap::new(),
+                    notify: ModelNotify::default(),
+                });
+                self.open_files.push(new_file_handle);
+                self.active_file = Some(self.open_files.len() - 1);
+            }
+        }
+    }
 }
 
 // fn list_dir(path: PathBuf) -> io::Result<ModelRc<SharedString>> {

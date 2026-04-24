@@ -5,18 +5,18 @@ slint::include_modules!();
 
 mod fs_util;
 
-use slint::{ComponentHandle, Model, ModelNotify, ModelRc, PlatformError, VecModel, Weak};
+use slint::{ComponentHandle, Model, ModelNotify, ModelRc, PlatformError, VecModel};
 use std::io::{Read, Seek};
-use std::{cell::RefCell, collections::HashMap, fs::File, io::SeekFrom, path::PathBuf, rc::Rc};
+use std::{collections::HashMap, fs::File, io::SeekFrom, path::PathBuf, rc::Rc};
 
-struct HexModel {
+struct FileModel {
     path: PathBuf,
     file_size: u64,
-    pending_changes: RefCell<HashMap<u64, u8>>,
+    pending_changes: HashMap<u64, u8>,
     notify: ModelNotify,
 }
 
-impl Model for HexModel {
+impl Model for FileModel {
     type Data = RowData;
 
     fn row_count(&self) -> usize {
@@ -34,7 +34,7 @@ impl Model for HexModel {
             return None;
         }
 
-        let changes = self.pending_changes.borrow();
+        let changes = self.pending_changes.clone(); // TODO: reevaluate clone
 
         let bytes: Vec<ByteData> = (0..16)
             .map(|i| {
@@ -86,24 +86,22 @@ impl Model for HexModel {
 struct AppState {
     // main_window: Weak<AppWindow>,
     active_file: Option<usize>,
-    open_files: Vec<Rc<HexModel>>,
+    open_files: Vec<Rc<FileModel>>,
 }
 
 fn main() -> Result<(), PlatformError> {
     let ui = AppWindow::new()?;
 
-    let state = Rc::new(RefCell::new(AppState {
-        // main_window: ui.as_weak(),
+    let mut state = AppState {
         open_files: Vec::new(),
         active_file: None,
-    }));
+    };
 
     let sync_ui = {
         let ui_weak = ui.as_weak();
-        let state_rc = state.clone();
+        let st = state.clone();
         move || {
             let ui = ui_weak.unwrap();
-            let st = state_rc.borrow();
 
             // 1. Update Tabs
             let tabs: Vec<FileEntry> = st
@@ -111,7 +109,7 @@ fn main() -> Result<(), PlatformError> {
                 .iter()
                 .enumerate()
                 .map(|(_, f)| {
-                    let has_changes = !f.pending_changes.borrow().is_empty();
+                    let has_changes = !f.pending_changes.is_empty();
                     FileEntry {
                         name: f
                             .path
@@ -139,9 +137,16 @@ fn main() -> Result<(), PlatformError> {
     };
 
     ui.on_open_file_clicked(move || {
-        fs_util::open_new_file(&mut state.borrow_mut());
-        sync_ui();
+        state.open_new_file();
     });
+
+    // let st_ui = state.clone();
+    // let sync_switch = sync_ui.clone();
+    // ui.on_switch_file(move |id| {
+    //     let mut test = st_ui.borrow_mut();
+    //     // test.active_file = Some(id as usize);
+    //     sync_switch();
+    // });
     // ui.on_close_file_clicked(move |index| {
     //     files_model.remove(index as usize);
     // });
