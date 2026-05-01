@@ -5,82 +5,13 @@ slint::include_modules!();
 
 mod fs_util;
 
-use slint::{ComponentHandle, Model, ModelNotify, ModelRc, PlatformError, SharedString, VecModel};
-use std::cell::{Ref, RefCell};
-use std::io::{Read, Seek};
-use std::{collections::HashMap, fs::File, io::SeekFrom, path::PathBuf, rc::Rc};
+use slint::{ComponentHandle, ModelRc, PlatformError, SharedString, VecModel};
+use std::{
+    cell::{Ref, RefCell},
+    rc::Rc,
+};
 
-struct FileModel {
-    path: PathBuf,
-    file_size: u64,
-    pending_changes: HashMap<u64, u8>,
-    notify: ModelNotify,
-}
-
-impl Model for FileModel {
-    type Data = RowData;
-
-    fn row_count(&self) -> usize {
-        (self.file_size as f64 / 16.0).ceil() as usize
-    }
-
-    fn row_data(&self, row: usize) -> Option<Self::Data> {
-        let pos = (row * 16) as u64;
-        let mut buffer = [0u8; 16];
-
-        let mut file = File::open(&self.path).ok()?;
-        file.seek(SeekFrom::Start(pos)).ok()?;
-        let n = file.read(&mut buffer).ok()?;
-        if n == 0 && self.file_size > 0 {
-            return None;
-        }
-
-        let changes = self.pending_changes.clone(); // RE: clone
-
-        let bytes: Vec<ByteData> = (0..16)
-            .map(|i| {
-                let abs_offset = pos + i as u64;
-                if let Some(&m_byte) = changes.get(&abs_offset) {
-                    ByteData {
-                        value: format!("{:02X}", m_byte).into(),
-                        is_modified: true,
-                    }
-                } else if i < n {
-                    ByteData {
-                        value: format!("{:02X}", buffer[i]).into(),
-                        is_modified: false,
-                    }
-                } else {
-                    ByteData {
-                        value: "  ".into(),
-                        is_modified: false,
-                    }
-                }
-            })
-            .collect();
-
-        let ascii: String = (0..n)
-            .map(|i| {
-                let b = changes.get(&(pos + i as u64)).cloned().unwrap_or(buffer[i]);
-                if b.is_ascii_graphic() || b == b' ' {
-                    b as char
-                } else {
-                    '.'
-                }
-            })
-            .collect();
-
-        Some(RowData {
-            offset: format!("{:08X}", pos).into(),
-            bytes: Rc::new(VecModel::from(bytes)).into(),
-            ascii: ascii.into(),
-        })
-    }
-
-    fn model_tracker(&self) -> &dyn slint::ModelTracker {
-        &self.notify
-    }
-}
+use crate::fs_util::FileModel;
 
 /// Top level app data references
 #[derive(Clone)]
