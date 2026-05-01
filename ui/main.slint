@@ -92,7 +92,7 @@ export component AppWindow inherits Window {
                                 width: 100px;
                                 color: #8b949e;
                                 font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                        }
+                            }
 
                             HorizontalLayout {
                                 horizontal-stretch: 1;
@@ -104,7 +104,7 @@ export component AppWindow inherits Window {
                                         text: b.value;
                                         color: b.is_modified ? #ffcc00 : #c9d1d9;
                                         font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                                    horizontal-alignment: center;
+                                        horizontal-alignment: center;
                                         vertical-alignment: center;
                                         edited => {
                                             root.byte_edited(r_idx, b_idx, self.text);
@@ -117,7 +117,7 @@ export component AppWindow inherits Window {
                                 text: row.ascii;
                                 width: 150px;
                                 font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
-                            color: #888;
+                                color: #888;
                                 vertical-alignment: center;
                             }
                         }

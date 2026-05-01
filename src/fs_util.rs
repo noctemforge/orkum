@@ -1,13 +1,13 @@
-use slint::{Model, ModelNotify, VecModel};
+use slint::{Model, ModelNotify, ModelRc, VecModel};
 use std::{
     collections::HashMap,
-    fs::{metadata, File},
+    fs::{File, metadata},
     io::SeekFrom,
     path::PathBuf,
     rc::Rc,
 };
 
-use crate::{AppState, ByteData, RowData};
+use crate::{AppState, AppWindow, ByteData, RowData};
 use std::io::{Read, Seek};
 
 fn show_file_dialog() -> Option<PathBuf> {
@@ -35,10 +35,32 @@ impl AppState {
 
     pub fn close_file(&mut self, index: i32) {
         self.open_files.remove(index as usize);
+        if let Some(active_idx) = self.active_file
+            && active_idx != index as usize
+        {
+            return;
+        }
         self.active_file = if index > 0 {
             Some((index - 1) as usize)
+        } else if self.open_files.len() > 0 {
+            Some(0)
         } else {
             None
+        };
+    }
+
+    pub fn load_active_file_hex(&self, app_window: &AppWindow) {
+        if self.open_files.len() < 1 {
+            return; // Guard double unwrap
+        }
+        let file = self
+            .open_files
+            .get(self.active_file.unwrap())
+            .unwrap()
+            .clone();
+        app_window.set_hex_rows(ModelRc::new(file));
+        if let Some(idx) = self.active_file {
+            app_window.set_active_tab(idx as i32);
         }
     }
 }

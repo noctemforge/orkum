@@ -16,7 +16,6 @@ use crate::fs_util::FileModel;
 /// Top level app data references
 #[derive(Clone)]
 struct AppState {
-    // main_window: Weak<AppWindow>,
     active_file: Option<usize>,
     open_files: Vec<Rc<FileModel>>,
 }
@@ -30,29 +29,24 @@ fn main() -> Result<(), PlatformError> {
     }));
 
     let st_ref = state.clone();
-    ui.on_open_file_clicked({
-        let ui_handle = ui.as_weak().clone();
-        move || {
-            st_ref.borrow_mut().open_new_file();
-            update_file_state(ui_handle.unwrap(), st_ref.borrow());
-        }
+    let ui_handle = ui.as_weak().clone();
+    ui.on_open_file_clicked(move || {
+        st_ref.borrow_mut().open_new_file();
+        update_file_state(ui_handle.unwrap(), st_ref.borrow());
     });
 
-    // let st_ui = state.clone();
-    // let sync_switch = sync_ui.clone();
-    // ui.on_switch_file(move |id| {
-    //     let mut test = st_ui.borrow_mut();
-    //     // test.active_file = Some(id as usize);
-    //     sync_switch();
-    // });
+    let st_ref = state.clone();
+    let ui_handle = ui.as_weak().clone();
+    ui.on_switch_file(move |index| {
+        st_ref.borrow_mut().active_file = Some(index as usize);
+        st_ref.borrow().load_active_file_hex(&ui_handle.unwrap());
+    });
 
     let st_ref = state.clone();
-    ui.on_close_file_clicked({
-        let ui_handle = ui.as_weak().clone();
-        move |index| {
-            st_ref.borrow_mut().close_file(index);
-            update_file_state(ui_handle.unwrap(), st_ref.borrow());
-        }
+    let ui_handle = ui.as_weak().clone();
+    ui.on_close_file_clicked(move |index| {
+        st_ref.borrow_mut().close_file(index);
+        update_file_state(ui_handle.unwrap(), st_ref.borrow());
     });
 
     // window.on_byte_edited(move |f, r, c, val| {
@@ -94,7 +88,5 @@ fn update_file_state(app_window: AppWindow, st_ref: Ref<'_, AppState>) {
         })
         .collect();
     app_window.set_open_files(ModelRc::new(entry_list));
-    if let Some(idx) = st_ref.active_file {
-        app_window.set_active_tab(idx as i32);
-    }
+    st_ref.load_active_file_hex(&app_window);
 }
