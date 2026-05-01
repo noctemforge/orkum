@@ -6,7 +6,7 @@ slint::include_modules!();
 mod fs_util;
 
 use slint::{ComponentHandle, Model, ModelNotify, ModelRc, PlatformError, SharedString, VecModel};
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
 use std::io::{Read, Seek};
 use std::{collections::HashMap, fs::File, io::SeekFrom, path::PathBuf, rc::Rc};
 
@@ -102,32 +102,8 @@ fn main() -> Result<(), PlatformError> {
     ui.on_open_file_clicked({
         let ui_handle = ui.as_weak().clone();
         move || {
-            let ui = ui_handle.unwrap();
             st_ref.borrow_mut().open_new_file();
-            let entry_list: VecModel<FileEntry> = st_ref
-                .borrow()
-                .open_files
-                .iter()
-                .map_while(|f| {
-                    let name = match f.path.file_name() {
-                        Some(name) => name.to_string_lossy().to_string().into(),
-                        None => {
-                            ui.invoke_error_notification(SharedString::from(
-                                "unloaded file edited",
-                            ));
-                            return None;
-                        }
-                    };
-                    Some(FileEntry {
-                        modified: !f.pending_changes.is_empty(),
-                        name,
-                    })
-                })
-                .collect();
-            ui.set_open_files(ModelRc::new(entry_list));
-            if let Some(idx) = st_ref.borrow().active_file {
-                ui.set_active_tab(idx as i32);
-            }
+            update_file_state(ui_handle.unwrap(), st_ref.borrow());
         }
     });
 
@@ -138,9 +114,16 @@ fn main() -> Result<(), PlatformError> {
     //     // test.active_file = Some(id as usize);
     //     sync_switch();
     // });
-    // ui.on_close_file_clicked(move |index| {
-    //     files_model.remove(index as usize);
-    // });
+
+    let st_ref = state.clone();
+    ui.on_close_file_clicked({
+        let ui_handle = ui.as_weak().clone();
+        move |index| {
+            st_ref.borrow_mut().close_file(index);
+            update_file_state(ui_handle.unwrap(), st_ref.borrow());
+        }
+    });
+
     // window.on_byte_edited(move |f, r, c, val| {
     //     if (f < files_model.row_count()) {
     //         window.invoke_error_notification(SharedString::from("unloaded file edited"));
@@ -158,4 +141,29 @@ fn main() -> Result<(), PlatformError> {
     // });
 
     ui.run()
+}
+
+fn update_file_state(app_window: AppWindow, st_ref: Ref<'_, AppState>) {
+    let entry_list: VecModel<FileEntry> = st_ref
+        .open_files
+        .iter()
+        .map_while(|f| {
+            let name = match f.path.file_name() {
+                Some(name) => name.to_string_lossy().to_string().into(),
+                None => {
+                    app_window
+                        .invoke_error_notification(SharedString::from("unsupported file name"));
+                    return None;
+                }
+            };
+            Some(FileEntry {
+                modified: !f.pending_changes.is_empty(),
+                name,
+            })
+        })
+        .collect();
+    app_window.set_open_files(ModelRc::new(entry_list));
+    if let Some(idx) = st_ref.active_file {
+        app_window.set_active_tab(idx as i32);
+    }
 }

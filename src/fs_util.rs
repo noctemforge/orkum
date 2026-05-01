@@ -25,6 +25,15 @@ impl AppState {
             }
         }
     }
+
+    pub fn close_file(&mut self, index: i32) {
+        self.open_files.remove(index as usize);
+        self.active_file = if index > 0 {
+            Some((index - 1) as usize)
+        } else {
+            None
+        }
+    }
 }
 
 // fn list_dir(path: PathBuf) -> io::Result<ModelRc<SharedString>> {
