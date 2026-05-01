@@ -5,7 +5,8 @@ slint::include_modules!();
 
 mod fs_util;
 
-use slint::{ComponentHandle, Model, ModelNotify, ModelRc, PlatformError, VecModel};
+use slint::{ComponentHandle, Model, ModelNotify, ModelRc, PlatformError, SharedString, VecModel};
+use std::cell::RefCell;
 use std::io::{Read, Seek};
 use std::{collections::HashMap, fs::File, io::SeekFrom, path::PathBuf, rc::Rc};
 
@@ -34,7 +35,7 @@ impl Model for FileModel {
             return None;
         }
 
-        let changes = self.pending_changes.clone(); // TODO: reevaluate clone
+        let changes = self.pending_changes.clone(); // RE: clone
 
         let bytes: Vec<ByteData> = (0..16)
             .map(|i| {
@@ -92,52 +93,42 @@ struct AppState {
 fn main() -> Result<(), PlatformError> {
     let ui = AppWindow::new()?;
 
-    let mut state = AppState {
+    let state = Rc::new(RefCell::new(AppState {
         open_files: Vec::new(),
         active_file: None,
-    };
+    }));
 
-    let sync_ui = {
-        let ui_weak = ui.as_weak();
-        let st = state.clone();
+    let st_ref = state.clone();
+    ui.on_open_file_clicked({
+        let ui_handle = ui.as_weak().clone();
         move || {
-            let ui = ui_weak.unwrap();
-
-            // 1. Update Tabs
-            let tabs: Vec<FileEntry> = st
+            let ui = ui_handle.unwrap();
+            st_ref.borrow_mut().open_new_file();
+            let entry_list: VecModel<FileEntry> = st_ref
+                .borrow()
                 .open_files
                 .iter()
-                .enumerate()
-                .map(|(_, f)| {
-                    let has_changes = !f.pending_changes.is_empty();
-                    FileEntry {
-                        name: f
-                            .path
-                            .file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
-                            .to_string()
-                            .into(),
-                        modified: has_changes,
-                    }
+                .map_while(|f| {
+                    let name = match f.path.file_name() {
+                        Some(name) => name.to_string_lossy().to_string().into(),
+                        None => {
+                            ui.invoke_error_notification(SharedString::from(
+                                "unloaded file edited",
+                            ));
+                            return None;
+                        }
+                    };
+                    Some(FileEntry {
+                        modified: !f.pending_changes.is_empty(),
+                        name,
+                    })
                 })
                 .collect();
-            ui.set_open_files(Rc::new(VecModel::from(tabs)).into());
-
-            // 2. Update Active File View
-            if let Some(idx) = st.active_file {
-                if let Some(active_file) = st.open_files.get(idx) {
-                    ui.set_hex_rows(ModelRc::new(active_file.clone()));
-                    ui.set_active_tab(idx as i32);
-                }
-            } else {
-                ui.set_active_tab(-1);
+            ui.set_open_files(ModelRc::new(entry_list));
+            if let Some(idx) = st_ref.borrow().active_file {
+                ui.set_active_tab(idx as i32);
             }
         }
-    };
-
-    ui.on_open_file_clicked(move || {
-        state.open_new_file();
     });
 
     // let st_ui = state.clone();

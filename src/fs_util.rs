@@ -1,14 +1,7 @@
-use slint::{ModelNotify, SharedString};
-use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
-use std::rc::Rc;
+use slint::ModelNotify;
+use std::{collections::HashMap, fs, path::PathBuf, rc::Rc};
 
 use crate::{AppState, FileModel};
-
-pub enum FileMessage {
-    Open { path: SharedString },
-}
 
 fn show_file_dialog() -> Option<PathBuf> {
     rfd::FileDialog::new()
