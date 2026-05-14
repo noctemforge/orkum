@@ -20,6 +20,18 @@ struct AppState {
     open_files: Vec<Rc<FileModel>>,
 }
 
+impl AppState {
+    fn get_active_file(&self) -> Option<Rc<FileModel>> {
+        if let Some(idx) = self.active_file {
+            match self.open_files.get(idx) {
+                Some(file) => return Some(file.clone()),
+                None => return None,
+            }
+        }
+        None
+    }
+}
+
 fn main() -> Result<(), PlatformError> {
     let ui = AppWindow::new()?;
 
@@ -49,21 +61,28 @@ fn main() -> Result<(), PlatformError> {
         update_file_state(ui_handle.unwrap(), st_ref.borrow());
     });
 
-    // window.on_byte_edited(move |f, r, c, val| {
-    //     if (f < files_model.row_count()) {
-    //         window.invoke_error_notification(SharedString::from("unloaded file edited"));
-    //         return;
-    //     }
-    //     let m_edit = files_model.row_data(f).unwrap().content;
-    //     // files_model[0];
-    //     if val.len() == 2 {
-    //         if let Ok(byte) = u8::from_str_radix(&val, 16) {
-    //             let abs_offset = (r as u64 * 16) + c as u64;
-    //             m_edit.pending_changes.borrow_mut().insert(abs_offset, byte);
-    //             m_edit.notify.row_changed(r as usize);
-    //         }
-    //     }
-    // });
+    let st_ref = state.clone();
+    let ui_handle = ui.as_weak().clone();
+    ui.on_byte_edited(move |row, c, val| {
+        match st_ref.borrow().get_active_file() {
+            Some(active_file) => {
+                if val.len() == 2 {
+                    if let Ok(byte) = u8::from_str_radix(&val, 16) {
+                        let abs_offset = (row as u64 * 16) + c as u64;
+                        active_file
+                            .pending_changes
+                            .borrow_mut()
+                            .insert(abs_offset, byte);
+                        println!("{:?}", active_file.pending_changes);
+                        active_file.notify.row_changed(row as usize);
+                    }
+                }
+            }
+            None => ui_handle
+                .unwrap()
+                .invoke_error_notification(SharedString::from("no active file")),
+        };
+    });
 
     ui.run()
 }
@@ -82,7 +101,7 @@ fn update_file_state(app_window: AppWindow, st_ref: Ref<'_, AppState>) {
                 }
             };
             Some(FileEntry {
-                modified: !f.pending_changes.is_empty(),
+                modified: !f.pending_changes.borrow().is_empty(),
                 name,
             })
         })
