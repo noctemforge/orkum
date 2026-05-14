@@ -1,5 +1,6 @@
 use slint::{Model, ModelNotify, ModelRc, VecModel};
 use std::{
+    cell::RefCell,
     collections::HashMap,
     fs::{File, metadata},
     io::SeekFrom,
@@ -24,7 +25,7 @@ impl AppState {
                 let new_file_handle = Rc::new(FileModel {
                     path,
                     file_size: meta.len(),
-                    pending_changes: HashMap::new(),
+                    pending_changes: Rc::new(RefCell::new(HashMap::new())),
                     notify: ModelNotify::default(),
                 });
                 self.open_files.push(new_file_handle);
@@ -68,7 +69,7 @@ impl AppState {
 pub struct FileModel {
     pub path: PathBuf,
     pub file_size: u64,
-    pub pending_changes: HashMap<u64, u8>,
+    pub pending_changes: Rc<RefCell<HashMap<u64, u8>>>,
     pub notify: ModelNotify,
 }
 
@@ -95,7 +96,7 @@ impl Model for FileModel {
         let bytes: Vec<ByteData> = (0..16)
             .map(|i| {
                 let abs_offset = pos + i as u64;
-                if let Some(&m_byte) = changes.get(&abs_offset) {
+                if let Some(&m_byte) = changes.borrow().get(&abs_offset) {
                     ByteData {
                         value: format!("{:02X}", m_byte).into(),
                         is_modified: true,
@@ -116,7 +117,11 @@ impl Model for FileModel {
 
         let ascii: String = (0..n)
             .map(|i| {
-                let b = changes.get(&(pos + i as u64)).cloned().unwrap_or(buffer[i]);
+                let b = changes
+                    .borrow()
+                    .get(&(pos + i as u64))
+                    .cloned()
+                    .unwrap_or(buffer[i]);
                 if b.is_ascii_graphic() || b == b' ' {
                     b as char
                 } else {
