@@ -3291,6 +3291,7 @@ dependencies = [
  "rfd",
  "slint",
  "slint-build",
+ "tempfile",
 ]
 
 [[package]]
