@@ -45,6 +45,11 @@ impl FileReader {
         &self.mmap[start..end]
     }
 
+    pub fn next_16_bytes(&self, start: usize) -> &[u8] {
+        let end = self.mmap.len().min(start + 16);
+        &self.mmap[start..end]
+    }
+
     pub fn len(&self) -> usize {
         self.mmap.len()
     }

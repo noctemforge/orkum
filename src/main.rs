@@ -3,6 +3,7 @@
 
 slint::include_modules!();
 
+mod file_reader;
 mod fs_util;
 
 use slint::{ComponentHandle, ModelRc, PlatformError, SharedString, VecModel};
@@ -43,7 +44,7 @@ fn main() -> Result<(), PlatformError> {
     let st_ref = state.clone();
     let ui_handle = ui.as_weak().clone();
     ui.on_open_file_clicked(move || {
-        st_ref.borrow_mut().open_new_file();
+        st_ref.borrow_mut().open_new_file(&ui_handle);
         update_file_state(ui_handle.unwrap(), st_ref.borrow());
     });
 
@@ -92,7 +93,7 @@ fn update_file_state(app_window: AppWindow, st_ref: Ref<'_, AppState>) {
         .open_files
         .iter()
         .map_while(|f| {
-            let name = match f.path.file_name() {
+            let name = match f.reader.path().file_name() {
                 Some(name) => name.to_string_lossy().to_string().into(),
                 None => {
                     app_window

@@ -1,15 +1,7 @@
 use slint::{Model, ModelNotify, ModelRc, VecModel, Weak};
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    fs::{File, metadata},
-    io::SeekFrom,
-    path::PathBuf,
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc};
 
 use crate::{AppState, AppWindow, ByteData, RowData, file_reader::FileReader};
-use std::io::{Read, Seek};
 
 fn show_file_dialog() -> Option<PathBuf> {
     rfd::FileDialog::new()
@@ -21,25 +13,19 @@ fn show_file_dialog() -> Option<PathBuf> {
 impl AppState {
     pub fn open_new_file(&mut self, window: &Weak<AppWindow>) {
         if let Some(path) = show_file_dialog() {
-            match metadata(&path) {
-                Ok(meta) => match FileReader::new(path, encoding_rs::UTF_8) {
-                    // RE: hardcoded encoding
-                    Ok(obj) => {
-                        let new_file_handle = Rc::new(FileModel {
-                            reader: Rc::new(obj),
-                            file_size: meta.len(),
-                            pending_changes: Rc::new(RefCell::new(HashMap::new())),
-                            notify: ModelNotify::default(),
-                        });
-                        self.open_files.push(new_file_handle);
-                        self.active_file = Some(self.open_files.len() - 1);
-                    }
-                    Err(err) => window.unwrap().invoke_error_notification(
-                        format!("Could not set up file reader : {}", err).into(),
-                    ),
-                },
+            match FileReader::new(path, encoding_rs::UTF_8) {
+                // RE: hardcoded encoding
+                Ok(obj) => {
+                    let new_file_handle = Rc::new(FileModel {
+                        reader: Rc::new(obj),
+                        pending_changes: Rc::new(RefCell::new(HashMap::new())),
+                        notify: ModelNotify::default(),
+                    });
+                    self.open_files.push(new_file_handle);
+                    self.active_file = Some(self.open_files.len() - 1);
+                }
                 Err(err) => window.unwrap().invoke_error_notification(
-                    format!("File system query failed : {}", err).into(),
+                    format!("Could not set up file reader : {}", err).into(),
                 ),
             }
         }
@@ -78,8 +64,7 @@ impl AppState {
 }
 
 pub struct FileModel {
-    pub path: PathBuf,
-    pub file_size: u64,
+    pub reader: Rc<FileReader>,
     pub pending_changes: Rc<RefCell<HashMap<u64, u8>>>,
     pub notify: ModelNotify,
 }
@@ -88,25 +73,19 @@ impl Model for FileModel {
     type Data = RowData;
 
     fn row_count(&self) -> usize {
-        (self.file_size as f64 / 16.0).ceil() as usize
+        (self.reader.len() as f64 / 16.0).ceil() as usize
     }
 
     fn row_data(&self, row: usize) -> Option<Self::Data> {
-        let pos = (row * 16) as u64;
-        let mut buffer = [0u8; 16];
+        let pos = row * 16;
+        let buffer = self.reader.next_16_bytes(pos);
+        let n = buffer.len();
 
-        let mut file = File::open(&self.path).ok()?;
-        file.seek(SeekFrom::Start(pos)).ok()?;
-        let n = file.read(&mut buffer).ok()?;
-        if n == 0 && self.file_size > 0 {
-            return None;
-        }
-
-        let changes = self.pending_changes.clone(); // RE: clone
+        let changes = self.pending_changes.clone();
 
         let bytes: Vec<ByteData> = (0..16)
             .map(|i| {
-                let abs_offset = pos + i as u64;
+                let abs_offset = (pos + i) as u64;
                 if let Some(&m_byte) = changes.borrow().get(&abs_offset) {
                     ByteData {
                         value: format!("{:02X}", m_byte).into(),
@@ -130,7 +109,7 @@ impl Model for FileModel {
             .map(|i| {
                 let b = changes
                     .borrow()
-                    .get(&(pos + i as u64))
+                    .get(&((pos + i) as u64))
                     .cloned()
                     .unwrap_or(buffer[i]);
                 if b.is_ascii_graphic() || b == b' ' {
