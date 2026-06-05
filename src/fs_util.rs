@@ -1,7 +1,7 @@
 use slint::{Model, ModelNotify, ModelRc, VecModel, Weak};
 use std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc};
 
-use crate::{AppState, AppWindow, ByteData, RowData, file_reader::FileReader};
+use crate::{AppState, AppWindow, ByteData, ByteState, RowData, file_reader::FileReader};
 
 fn show_file_dialog() -> Option<PathBuf> {
     rfd::FileDialog::new()
@@ -65,7 +65,7 @@ impl AppState {
 
 pub struct FileModel {
     pub reader: Rc<FileReader>,
-    pub pending_changes: Rc<RefCell<HashMap<u64, u8>>>,
+    pub pending_changes: Rc<RefCell<HashMap<u64, String>>>,
     pub notify: ModelNotify,
 }
 
@@ -83,23 +83,26 @@ impl Model for FileModel {
 
         let changes = self.pending_changes.clone();
 
-        let bytes: Vec<ByteData> = (0..16)
+        let bytes: Vec<ByteData> = (0..n)
             .map(|i| {
                 let abs_offset = (pos + i) as u64;
-                if let Some(&m_byte) = changes.borrow().get(&abs_offset) {
+                if let Some(val) = changes.borrow().get(&abs_offset) {
                     ByteData {
-                        value: format!("{:02X}", m_byte).into(),
-                        is_modified: true,
+                        value: val.into(),
+                        state: match u8::from_str_radix(&val, 16) {
+                            Ok(_) => ByteState::Modified,
+                            Err(_) => ByteState::Error,
+                        },
                     }
                 } else if i < n {
                     ByteData {
                         value: format!("{:02X}", buffer[i]).into(),
-                        is_modified: false,
+                        state: ByteState::Synced,
                     }
                 } else {
                     ByteData {
                         value: "  ".into(),
-                        is_modified: false,
+                        state: ByteState::Synced,
                     }
                 }
             })
@@ -111,12 +114,13 @@ impl Model for FileModel {
                     .borrow()
                     .get(&((pos + i) as u64))
                     .cloned()
-                    .unwrap_or(buffer[i]);
-                if b.is_ascii_graphic() || b == b' ' {
-                    b as char
-                } else {
-                    '.'
-                }
+                    .unwrap_or(format!("{}", buffer[i]));
+                // if b.is_ascii_graphic() || b == b' ' {
+                //     b as char
+                // } else {
+                //     '.'
+                // }
+                b
             })
             .collect();
 

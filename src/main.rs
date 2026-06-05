@@ -67,17 +67,12 @@ fn main() -> Result<(), PlatformError> {
     ui.on_byte_edited(move |row, c, val| {
         match st_ref.borrow().get_active_file() {
             Some(active_file) => {
-                if val.len() == 2 {
-                    if let Ok(byte) = u8::from_str_radix(&val, 16) {
-                        let abs_offset = (row as u64 * 16) + c as u64;
-                        active_file
-                            .pending_changes
-                            .borrow_mut()
-                            .insert(abs_offset, byte);
-                        println!("{:?}", active_file.pending_changes);
-                        active_file.notify.row_changed(row as usize);
-                    }
-                }
+                let abs_offset = (row as u64 * 16) + c as u64;
+                active_file
+                    .pending_changes
+                    .borrow_mut()
+                    .insert(abs_offset, val.to_string());
+                active_file.notify.row_changed(row as usize);
             }
             None => ui_handle
                 .unwrap()

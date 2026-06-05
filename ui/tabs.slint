@@ -1,10 +1,17 @@
 import { ScrollView, Button, VerticalBox, ListView } from "std-widgets.slint";
 import { IconButton, Palette } from "util.slint";
 
+/// Possible states a byte can be in
+export enum ByteState {
+    synced,
+    modified,
+    error
+}
+
 /// Row of editable bytes
 export struct ByteData {
     value: string,
-    is_modified: bool,
+    state: ByteState,
 }
 
 /// Row of hex bytes

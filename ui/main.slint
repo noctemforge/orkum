@@ -6,7 +6,7 @@ import {
     VerticalBox,
     ListView,
 } from "std-widgets.slint";
-import { FileEntry, RowData, TabHandle } from "tabs.slint";
+import { FileEntry, RowData, TabHandle, ByteState } from "tabs.slint";
 import { Palette } from "util.slint";
 
 component Landing {
@@ -99,10 +99,10 @@ export component AppWindow inherits Window {
                                 spacing: 4px;
                                 for b[b_idx] in row.bytes: Rectangle {
                                     width: 24px;
-                                    background: b.is_modified ? #3e3e10 : transparent;
+                                    background: b.state == ByteState.modified ? #3e3e10 : transparent;
                                     TextInput {
                                         text: b.value;
-                                        color: b.is_modified ? #ffcc00 : #c9d1d9;
+                                        color: b.state == ByteState.modified ? #ffcc00 : #c9d1d9;
                                         font-family: "Cascadia Mono"; // TODO: Change to linked or bundled
                                         horizontal-alignment: center;
                                         vertical-alignment: center;
