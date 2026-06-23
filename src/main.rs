@@ -22,6 +22,13 @@ struct AppState {
 }
 
 impl AppState {
+    fn new() -> Self {
+        AppState {
+            open_files: Vec::new(),
+            active_file: None,
+        }
+    }
+
     fn get_active_file(&self) -> Option<Rc<FileModel>> {
         if let Some(idx) = self.active_file {
             match self.open_files.get(idx) {
@@ -36,10 +43,7 @@ impl AppState {
 fn main() -> Result<(), PlatformError> {
     let ui = AppWindow::new()?;
 
-    let state = Rc::new(RefCell::new(AppState {
-        open_files: Vec::new(),
-        active_file: None,
-    }));
+    let state = Rc::new(RefCell::new(AppState::new()));
 
     let st_ref = state.clone();
     let ui_handle = ui.as_weak().clone();
