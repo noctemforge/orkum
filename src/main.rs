@@ -8,34 +8,6 @@ use std::{
     rc::Rc,
 };
 
-use crate::fs_util::FileModel;
-
-/// Top level app data references
-#[derive(Clone)]
-struct AppState {
-    active_file: Option<usize>,
-    open_files: Vec<Rc<FileModel>>,
-}
-
-impl AppState {
-    fn new() -> Self {
-        AppState {
-            open_files: Vec::new(),
-            active_file: None,
-        }
-    }
-
-    fn get_active_file(&self) -> Option<Rc<FileModel>> {
-        if let Some(idx) = self.active_file {
-            match self.open_files.get(idx) {
-                Some(file) => return Some(file.clone()),
-                None => return None,
-            }
-        }
-        None
-    }
-}
-
 fn main() -> Result<(), PlatformError> {
     let ui = AppWindow::new()?;
 
