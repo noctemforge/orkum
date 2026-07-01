@@ -1,3 +1,4 @@
+use anyhow::Result;
 use slint::{Model, ModelNotify, VecModel};
 use std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc};
 
@@ -80,6 +81,20 @@ impl Model for FileModel {
 
     fn model_tracker(&self) -> &dyn slint::ModelTracker {
         &self.notify
+    }
+}
+
+impl FileModel {
+    pub fn new_utf8_dialog() -> Result<Option<Self>> {
+        if let Some(path) = show_file_dialog() {
+            let reader = FileReader::new(path, encoding_rs::UTF_8)?;
+            return Ok(Some(FileModel {
+                reader: Rc::new(reader),
+                pending_changes: Rc::new(RefCell::new(HashMap::new())),
+                notify: ModelNotify::default(),
+            }));
+        }
+        Ok(None)
     }
 }
 

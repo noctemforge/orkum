@@ -1,8 +1,7 @@
 use anyhow::Result;
-use encoding_rs::{Encoding, UTF_16BE, UTF_16LE, UTF_8, WINDOWS_1252};
+use encoding_rs::{Encoding, UTF_8, UTF_16BE, UTF_16LE, WINDOWS_1252};
 use memmap2::Mmap;
-use std::fs::File;
-use std::path::PathBuf;
+use std::{fs::File, path::PathBuf};
 
 pub struct FileReader {
     mmap: Mmap,
