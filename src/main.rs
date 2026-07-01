@@ -2,11 +2,16 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 slint::include_modules!();
+
+mod util;
+
 use slint::{ComponentHandle, ModelRc, PlatformError, SharedString, VecModel};
 use std::{
     cell::{Ref, RefCell},
     rc::Rc,
 };
+
+use crate::util::state::AppState;
 
 fn main() -> Result<(), PlatformError> {
     let ui = AppWindow::new()?;
@@ -23,7 +28,7 @@ fn main() -> Result<(), PlatformError> {
     let st_ref = state.clone();
     let ui_handle = ui.as_weak().clone();
     ui.on_switch_file(move |index| {
-        st_ref.borrow_mut().active_file = Some(index as usize);
+        st_ref.borrow_mut().set_active_index(index as usize);
         st_ref.borrow().load_active_file_hex(&ui_handle.unwrap());
     });
 
@@ -57,8 +62,7 @@ fn main() -> Result<(), PlatformError> {
 
 fn update_file_state(app_window: AppWindow, st_ref: Ref<'_, AppState>) {
     let entry_list: VecModel<FileEntry> = st_ref
-        .open_files
-        .iter()
+        .iter_open_files()
         .map_while(|f| {
             let name = match f.reader.path().file_name() {
                 Some(name) => name.to_string_lossy().to_string().into(),

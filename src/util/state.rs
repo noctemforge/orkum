@@ -1,8 +1,7 @@
-use std::rc::Rc;
+use slint::{ModelRc, Weak};
+use std::{rc::Rc, slice::Iter};
 
-use slint::Weak;
-
-use crate::{AppWindow, util::{file_model::FileModel}};
+use crate::{AppWindow, util::file_model::FileModel};
 
 /// Top level app data references
 #[derive(Clone)]
@@ -12,14 +11,22 @@ pub(crate) struct AppState {
 }
 
 impl AppState {
-    fn new() -> Self {
+    pub fn new() -> Self {
         AppState {
             open_files: Vec::new(),
             active_file: None,
         }
     }
 
-    fn get_active_file(&self) -> Option<Rc<FileModel>> {
+    pub fn set_active_index(&mut self, index: impl Into<Option<usize>>) {
+        self.active_file = index.into();
+    }
+
+    pub fn iter_open_files(&self) -> Iter<'_, Rc<FileModel>> {
+        self.open_files.iter()
+    }
+
+    pub fn get_active_file(&self) -> Option<Rc<FileModel>> {
         if let Some(idx) = self.active_file {
             match self.open_files.get(idx) {
                 Some(file) => return Some(file.clone()),
@@ -28,26 +35,19 @@ impl AppState {
         }
         None
     }
-}
 
-impl AppState {
     pub fn open_new_file(&mut self, window: &Weak<AppWindow>) {
-        if let Some(path) = show_file_dialog() {
-            match FileReader::new(path, encoding_rs::UTF_8) {
-                // RE: hardcoded encoding
-                Ok(obj) => {
-                    let new_file_handle = Rc::new(FileModel {
-                        reader: Rc::new(obj),
-                        pending_changes: Rc::new(RefCell::new(HashMap::new())),
-                        notify: ModelNotify::default(),
-                    });
-                    self.open_files.push(new_file_handle);
+        match FileModel::new_utf8_dialog() {
+            // RE: hardcoded encoding
+            Ok(obj) => {
+                if let Some(file) = obj {
+                    self.open_files.push(Rc::new(file));
                     self.active_file = Some(self.open_files.len() - 1);
                 }
-                Err(err) => window.unwrap().invoke_error_notification(
-                    format!("Could not set up file reader : {}", err).into(),
-                ),
             }
+            Err(err) => window.unwrap().invoke_error_notification(
+                format!("Could not set up file reader : {}", err).into(),
+            ),
         }
     }
 
