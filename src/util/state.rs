@@ -12,6 +12,7 @@ pub(crate) struct AppState {
 }
 
 impl AppState {
+    /// Creates an empty instance
     pub fn new() -> Self {
         AppState {
             open_files: Vec::new(),
@@ -19,10 +20,12 @@ impl AppState {
         }
     }
 
+    /// Set the active file index
     pub fn set_active_index(&mut self, index: impl Into<Option<usize>>) {
         self.active_file = index.into();
     }
 
+    /// Returns the active file model
     pub fn get_active_file(&self) -> Option<Rc<FileModel>> {
         if let Some(idx) = self.active_file {
             match self.open_files.get(idx) {
@@ -33,6 +36,7 @@ impl AppState {
         None
     }
 
+    /// Open a new file dialog and loads the selected file
     pub fn open_new_file(&mut self, window: &Weak<AppWindow>) {
         match FileModel::new_utf8_dialog() {
             // RE: hardcoded encoding
