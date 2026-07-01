@@ -1,8 +1,9 @@
 use anyhow::Result;
+use orkum::{ByteData, ByteState, RowData};
 use slint::{Model, ModelNotify, VecModel};
 use std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc};
 
-use crate::{ByteData, ByteState, RowData, util::file_reader::FileReader};
+use crate::util::file_reader::FileReader;
 
 fn show_file_dialog() -> Option<PathBuf> {
     rfd::FileDialog::new()
