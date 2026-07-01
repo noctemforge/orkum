@@ -1,11 +1,8 @@
 mod util;
 
-use orkum::{AppWindow, FileEntry};
-use slint::{ComponentHandle, ModelRc, PlatformError, SharedString, VecModel};
-use std::{
-    cell::{Ref, RefCell},
-    rc::Rc,
-};
+use orkum::AppWindow;
+use slint::{ComponentHandle, PlatformError, SharedString};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::util::state::AppState;
 
@@ -18,7 +15,7 @@ fn main() -> Result<(), PlatformError> {
     let ui_handle = ui.as_weak().clone();
     ui.on_open_file_clicked(move || {
         st_ref.borrow_mut().open_new_file(&ui_handle);
-        update_file_state(ui_handle.unwrap(), st_ref.borrow());
+        st_ref.borrow().sync_file_state(ui_handle.unwrap());
     });
 
     let st_ref = state.clone();
@@ -32,7 +29,7 @@ fn main() -> Result<(), PlatformError> {
     let ui_handle = ui.as_weak().clone();
     ui.on_close_file_clicked(move |index| {
         st_ref.borrow_mut().close_file(index);
-        update_file_state(ui_handle.unwrap(), st_ref.borrow());
+        st_ref.borrow().sync_file_state(ui_handle.unwrap());
     });
 
     let st_ref = state.clone();
@@ -54,26 +51,4 @@ fn main() -> Result<(), PlatformError> {
     });
 
     ui.run()
-}
-
-fn update_file_state(app_window: AppWindow, st_ref: Ref<'_, AppState>) {
-    let entry_list: VecModel<FileEntry> = st_ref
-        .iter_open_files()
-        .map_while(|f| {
-            let name = match f.reader.path().file_name() {
-                Some(name) => name.to_string_lossy().to_string().into(),
-                None => {
-                    app_window
-                        .invoke_error_notification(SharedString::from("unsupported file name"));
-                    return None;
-                }
-            };
-            Some(FileEntry {
-                modified: !f.pending_changes.borrow().is_empty(),
-                name,
-            })
-        })
-        .collect();
-    app_window.set_open_files(ModelRc::new(entry_list));
-    st_ref.load_active_file_hex(&app_window);
 }

@@ -1,5 +1,6 @@
-use slint::{ModelRc, Weak};
-use std::{rc::Rc, slice::Iter};
+use orkum::FileEntry;
+use slint::{ModelRc, SharedString, VecModel, Weak};
+use std::rc::Rc;
 
 use crate::{AppWindow, util::file_model::FileModel};
 
@@ -20,10 +21,6 @@ impl AppState {
 
     pub fn set_active_index(&mut self, index: impl Into<Option<usize>>) {
         self.active_file = index.into();
-    }
-
-    pub fn iter_open_files(&self) -> Iter<'_, Rc<FileModel>> {
-        self.open_files.iter()
     }
 
     pub fn get_active_file(&self) -> Option<Rc<FileModel>> {
@@ -51,15 +48,17 @@ impl AppState {
         }
     }
 
+    /// Loads the currently active file data into the app window
     pub fn close_file(&mut self, index: i32) {
-        self.open_files.remove(index as usize);
+        let idx = index as usize;
+        self.open_files.remove(idx);
         if let Some(active_idx) = self.active_file
-            && active_idx != index as usize
+            && active_idx != idx
         {
             return;
         }
-        self.active_file = if index > 0 {
-            Some((index - 1) as usize)
+        self.active_file = if idx > 0 {
+            Some(idx - 1)
         } else if self.open_files.len() > 0 {
             Some(0)
         } else {
@@ -67,6 +66,7 @@ impl AppState {
         };
     }
 
+    /// Loads the currently active file data into the app window
     pub fn load_active_file_hex(&self, app_window: &AppWindow) {
         if self.open_files.len() < 1 {
             return; // Guard double unwrap
@@ -80,5 +80,29 @@ impl AppState {
         if let Some(idx) = self.active_file {
             app_window.set_active_tab(idx as i32);
         }
+    }
+
+    /// Updates app window with the current state data
+    pub fn sync_file_state(&self, app_window: AppWindow) {
+        let entry_list: VecModel<FileEntry> = self
+            .open_files
+            .iter()
+            .map_while(|f| {
+                let name = match f.reader.path().file_name() {
+                    Some(name) => name.to_string_lossy().to_string().into(),
+                    None => {
+                        app_window
+                            .invoke_error_notification(SharedString::from("unsupported file name"));
+                        return None;
+                    }
+                };
+                Some(FileEntry {
+                    modified: !f.pending_changes.borrow().is_empty(),
+                    name,
+                })
+            })
+            .collect();
+        app_window.set_open_files(ModelRc::new(entry_list));
+        self.load_active_file_hex(&app_window);
     }
 }
