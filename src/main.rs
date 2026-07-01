@@ -2,10 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 slint::include_modules!();
-
-mod file_reader;
-mod fs_util;
-
 use slint::{ComponentHandle, ModelRc, PlatformError, SharedString, VecModel};
 use std::{
     cell::{Ref, RefCell},
