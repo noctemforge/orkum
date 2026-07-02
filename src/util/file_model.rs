@@ -1,16 +1,7 @@
+use crate::{ByteData, ByteState, RowData, util::file_reader::FileReader};
 use anyhow::Result;
-use orkum::{ByteData, ByteState, RowData};
 use slint::{Model, ModelNotify, VecModel};
 use std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc};
-
-use crate::util::file_reader::FileReader;
-
-fn show_file_dialog() -> Option<PathBuf> {
-    rfd::FileDialog::new()
-        .set_title("Select a file")
-        .set_directory(PathBuf::from("."))
-        .pick_file()
-}
 
 pub struct FileModel {
     pub reader: Rc<FileReader>,
@@ -97,6 +88,13 @@ impl FileModel {
         }
         Ok(None)
     }
+}
+
+fn show_file_dialog() -> Option<PathBuf> {
+    rfd::FileDialog::new()
+        .set_title("Select a file")
+        .set_directory(PathBuf::from("."))
+        .pick_file()
 }
 
 // fn list_dir(path: PathBuf) -> io::Result<ModelRc<SharedString>> {

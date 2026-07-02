@@ -1,10 +1,6 @@
-mod util;
-
-use orkum::AppWindow;
+use orkum::{AppWindow, util::state::AppState};
 use slint::{ComponentHandle, PlatformError, SharedString};
 use std::{cell::RefCell, rc::Rc};
-
-use crate::util::state::AppState;
 
 fn main() -> Result<(), PlatformError> {
     let ui = AppWindow::new()?;

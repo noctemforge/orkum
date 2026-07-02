@@ -1,4 +1,4 @@
-use orkum::FileEntry;
+use crate::FileEntry;
 use slint::{ModelRc, SharedString, VecModel, Weak};
 use std::rc::Rc;
 
@@ -6,7 +6,7 @@ use crate::{AppWindow, util::file_model::FileModel};
 
 /// Top level app data references
 #[derive(Clone)]
-pub(crate) struct AppState {
+pub struct AppState {
     active_file: Option<usize>,
     open_files: Vec<Rc<FileModel>>,
 }
