@@ -4,14 +4,14 @@ version = "0.2.0"
 edition = "2024"
 
 [dependencies]
-slint = "1.16"
+slint = "1.17"
 rfd = "0.17"
 anyhow = "1.0"
 encoding_rs = "0.8"
 memmap2 = "0.9"
 
 [build-dependencies]
-slint-build = "1.15"
+slint-build = "1.17"
 
 [dev-dependencies]
 tempfile = "3.27"
