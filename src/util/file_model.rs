@@ -77,16 +77,22 @@ impl Model for FileModel {
 }
 
 impl FileModel {
+    /// Reads a file using a rfd dialog selection by the user
     pub fn new_utf8_dialog() -> Result<Option<Self>> {
         if let Some(path) = show_file_dialog() {
-            let reader = FileReader::new(path, encoding_rs::UTF_8)?;
-            return Ok(Some(FileModel {
-                reader: Rc::new(reader),
-                pending_changes: Rc::new(RefCell::new(HashMap::new())),
-                notify: ModelNotify::default(),
-            }));
+            return Ok(Some(Self::read_utf8(path)?));
         }
         Ok(None)
+    }
+
+    /// Reads a file using path
+    pub fn read_utf8(path: PathBuf) -> Result<Self> {
+        let reader = FileReader::new(path, encoding_rs::UTF_8)?;
+        Ok(FileModel {
+            reader: Rc::new(reader),
+            pending_changes: Rc::new(RefCell::new(HashMap::new())),
+            notify: ModelNotify::default(),
+        })
     }
 }
 
