@@ -26,7 +26,7 @@ impl AppState {
         let ui_handle = ui.as_weak().clone();
         ui.on_open_file_clicked(move || {
             st_ref.borrow_mut().open_new_file(&ui_handle);
-            st_ref.borrow().sync_file_state(ui_handle.unwrap());
+            st_ref.borrow().sync_file_state(&ui_handle);
         });
 
         let st_ref = state.clone();
@@ -40,7 +40,7 @@ impl AppState {
         let ui_handle = ui.as_weak().clone();
         ui.on_close_file_clicked(move |index| {
             st_ref.borrow_mut().close_file(index);
-            st_ref.borrow().sync_file_state(ui_handle.unwrap());
+            st_ref.borrow().sync_file_state(&ui_handle);
         });
 
         let st_ref = state.clone();
@@ -84,14 +84,19 @@ impl AppState {
             // RE: hardcoded encoding
             Ok(obj) => {
                 if let Some(file) = obj {
-                    self.open_files.push(Rc::new(file));
-                    self.active_file = Some(self.open_files.len() - 1);
+                    self.add_file(file);
                 }
             }
             Err(err) => window.unwrap().invoke_error_notification(
                 format!("Could not set up file reader : {}", err).into(),
             ),
         }
+    }
+
+    ///Appends a new file to the open files list and switches to it
+    pub fn add_file(&mut self, file: FileModel) {
+        self.open_files.push(Rc::new(file));
+        self.active_file = Some(self.open_files.len() - 1);
     }
 
     /// Loads the currently active file data into the app window
@@ -129,7 +134,8 @@ impl AppState {
     }
 
     /// Updates app window with the current state data
-    fn sync_file_state(&self, app_window: AppWindow) {
+    pub fn sync_file_state(&self, ui: &Weak<AppWindow>) {
+        let app_window = ui.unwrap();
         let entry_list: VecModel<FileEntry> = self
             .open_files
             .iter()
